@@ -18,6 +18,9 @@ const ASPECT_RATIO = width / height;
 const LATITUDE_DELTA = 0.2922;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
+class PositionRequest extends React.Component {
+
+}
 
 class MapContainer extends React.Component {
   constructor (props) {
@@ -38,8 +41,25 @@ class MapContainer extends React.Component {
     }
   }
 
-  returnCity () {
-    
+  setUserLocation () {
+
+  }
+
+  sendPositionRequest(_latitude, _longitude) {
+    fetch('http://maps.googleapis.com/maps/api/geocode/json?latlng=' + _latitude + ','+ _longitude + '&sensor=true')
+    .then((response) => response.json())
+    .then((responseJSON) => {
+      if(responseJSON.status === 'OK') {
+        console.log(responseJSON);
+        this.setState({city: responseJSON.results[2].formatted_address});
+      } else {
+        console.error('Status: ' + responseJSON.status);
+      } 
+    })
+    .catch((error) =>{
+      console.error(error);
+    })
+    console.log(this.state.city);
   }
   
   componentDidMount () {
@@ -56,25 +76,11 @@ class MapContainer extends React.Component {
       this.setState({ initialPosition: initialRegion });
       this.setState({ markerPosition: initialRegion });
 
-      fetch('http://maps.googleapis.com/maps/api/geocode/json?latlng=50.2667461,18.6565925&sensor=true')
-        .then((response) => response.json())
-        .then((responseJSON) => {
-          if(responseJSON.status === 'OK') {
-            this.setState({city: responseJSON.results[2].formatted_address})
-            console.log(responseJSON.results[2].formatted_address);
-          } else {
-            console.error('Request error')
-          }
-          
-        })
-        .catch((error) =>{
-          console.error(error);
-      })
-      console.log(this.state.city);
+      this.sendPositionRequest(initialRegion.latitude, initialRegion.longitude);
       
     }, 
     (error) => alert(JSON.stringify(error)),
-    {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000})
+    {enableHighAccuracy: true, timeout: 20000, maximumAge: 180000})
     /*
     this.watchID = navigator.geolocation.watchPosition((position) => {
       var lat = parseFloat(position.coords.latitude)
@@ -118,6 +124,12 @@ class MapContainer extends React.Component {
 }
 
 class ButtonsContainer extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+    }
+  }
+
   render () {
     return (
       <View style={styles.buttonsContainer}>
@@ -190,7 +202,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
   },
   cityName: {
-    alignItems: 'flex-end',
+    position: 'absolute',
   },
   buttonsContainer: {
     flex: 1,
